@@ -70,6 +70,6 @@ async fn main() {
     });
 
     while let Some((file_name, found_line)) = receiver.recv().await {
-        println!("{}: {}", file_name.red(), found_line);
+        println!("{}: {}", file_name, found_line.green());
     }
 }
