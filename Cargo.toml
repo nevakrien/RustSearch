@@ -1,0 +1,9 @@
+[package]
+name = "RustSearch"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+colored = "2.1.0"
+tokio = { version = "1.39.2", features = ["full"] }
+walkdir = "2.5.0"
