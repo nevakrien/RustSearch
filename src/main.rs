@@ -17,21 +17,30 @@ async fn find_in_file(file: PathBuf, term: &str, sender: Sender<(String, String)
 
     let buf = tokio::io::BufReader::new(file);
     let mut lines = buf.lines();
-
-    while let Ok(line_result) = lines.next_line().await {
-        match line_result {
-            Some(line) => {
-                // Check if the line contains valid UTF-8
-                // if line.chars().all(|c| c.is_alphabetic() || c.is_whitespace() || c.is_numeric() || c.is_ascii_punctuation()) {
-                    if line.contains(term) {
-                        let result = (file_name.clone(), line);
-                        if sender.send(result).await.is_err() {
-                            eprintln!("Failed to send result");
-                        }
-                    }
-                // }
+    while let line_result = lines.next_line().await {
+        let line_option = match line_result {
+            Ok(line) => line,
+            Err(e) => {
+                if e.kind() == std::io::ErrorKind::InvalidData {
+                    // Ignore invalid UTF-8 errors
+                    return;
+                } else {
+                    eprintln!("Error reading line from file '{}': {}", file_name, e);
+                    return;
+                }
             }
-            None=> return,
+        };
+
+        match line_option {
+            Some(line) => {
+                if line.contains(term) {
+                    let result = (file_name.clone(), line);
+                    if sender.send(result).await.is_err() {
+                        eprintln!("Failed to send result");
+                    }
+                }
+            }
+            None => return,
         }
     }
 }
